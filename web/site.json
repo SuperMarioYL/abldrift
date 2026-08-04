@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "name": "abldrift",
+  "github": "https://github.com/SuperMarioYL/abldrift",
+  "host": "abldrift.lei6393.com",
+  "lang": {
+    "primary": "zh",
+    "toggle": true
+  },
+  "accent": [
+    "#2dd4bf",
+    "#5eead4",
+    "#0d9488"
+  ],
+  "hero": {
+    "eyebrow": {
+      "zh": "发布前 · 行为漂移 · 一条命令",
+      "en": "Pre-release · Behavioral drift · One command"
+    },
+    "headline": {
+      "zh": "改了模型，先看清它悄悄变了什么\n再决定要不要发布",
+      "en": "See what your modified model quietly became\nbefore you ship it"
+    },
+    "sub": {
+      "zh": "用 30 个探针对比原模型与去审查模型，量化乐观度、语气、风险规避的沉默漂移，生成可复现的发布前报告。",
+      "en": "Probe your base vs. uncensored model across 30 prompts; quantify the silent optimism, tone, and risk-aversion drift into a reproducible pre-release report."
+    },
+    "command": "abldrift run --base llama3 --modified llama3-abliterated"
+  },
+  "advantages": [
+    {
+      "title": {
+        "zh": "发布前就抓到沉默漂移",
+        "en": "Catch silent drift before release"
+      },
+      "body": {
+        "zh": "去审查(abliterate)不只是去掉拒绝——它常常把模型的整体语气、乐观度、风险规避一起改了。在发布前就把这层漂移量化出来，而不是等用户投诉。",
+        "en": "Abliterating a model doesn't just strip refusals — it often shifts the whole tone, optimism, and risk-aversion. Quantify that drift before release, not after user complaints."
+      },
+      "chips": [
+        "› 30 探针对比",
+        "› 乐观度 · 语气 · 风险"
+      ]
+    },
+    {
+      "title": {
+        "zh": "一条命令出报告",
+        "en": "A report in one command"
+      },
+      "body": {
+        "zh": "跑一次，拿到 delta.md 和 delta.json——人能读的摘要加机器能用的向量，可以直接卡进发布流程当出口闸。",
+        "en": "Run once, get delta.md and delta.json — a human-readable summary plus a machine-usable vector you can wire straight into your release gate."
+      },
+      "chips": [
+        "› delta.md + JSON",
+        "› <60 秒"
+      ]
+    },
+    {
+      "title": {
+        "zh": "本地跑，模型不出门",
+        "en": "Runs locally, your model never leaves"
+      },
+      "zh_body_note": "local-ollama",
+      "body": {
+        "zh": "直接对本地模型对跑，不上传权重，不调云——你的模型和探针响应全程留在本机。",
+        "en": "Probes run directly against your local models — no weight uploads, no cloud calls. Your model and its responses stay on your machine."
+      },
+      "chips": [
+        "› 本地模型",
+        "› 无云上传"
+      ]
+    },
+    {
+      "title": {
+        "zh": "可重复，能定基线",
+        "en": "Reproducible, baseline-able"
+      },
+      "body": {
+        "zh": "种子可复现，每一次漂移向量都能和上一次比；把它放进 CI，漂移超阈值就拦下这次发布。",
+        "en": "Seeded for reproducibility — every drift vector compares against the last. Drop it into CI and block a release when drift crosses your threshold."
+      },
+      "chips": [
+        "› 种子可复现",
+        "› CI 出口闸"
+      ]
+    }
+  ],
+  "scene": {
+    "kind": "particle-field"
+  },
+  "cta": {
+    "headline": {
+      "zh": "下一次发模型前，先审一次",
+      "en": "Audit your next model before it ships"
+    },
+    "sub": {
+      "zh": "本地一条命令，60 秒拿到漂移报告。",
+      "en": "One local command, a drift report in 60 seconds."
+    },
+    "button": {
+      "zh": "在 GitHub 上看",
+      "en": "See it on GitHub"
+    }
+  },
+  "footer": {
+    "tag": {
+      "zh": "MIT · 本地优先 · 开源",
+      "en": "MIT · Local-first · Open source"
+    }
+  }
+}
