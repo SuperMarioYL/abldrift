@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300"
+     font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif"
+     role="img" aria-label="abldrift — 去审查模型发布前的行为漂移审计器">
+  <defs>
+    <!-- 标题流光：渐变窗口整体左→右平移，两端窗口都在文字 bbox 之外 → 无缝循环 -->
+    <linearGradient id="hg" x1="-220%" y1="0%" x2="-100%" y2="0%">
+      <stop offset="0%"   stop-color="#5E5CE6"/>
+      <stop offset="50%"  stop-color="#10A37F"/>
+      <stop offset="100%" stop-color="#5E5CE6"/>
+      <animate attributeName="x1" values="-220%;100%" dur="5s" repeatCount="indefinite"/>
+      <animate attributeName="x2" values="-100%;220%" dur="5s" repeatCount="indefinite"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="880" height="300" fill="#F5F5F7"/>
+  <text x="440" y="148" text-anchor="middle" font-size="56" font-weight="700" fill="url(#hg)">abldrift</text>
+  <!-- tagline 入场：一次性淡入 + 上移 (freeze)，仅装饰 -->
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="0.4s" dur="0.8s" fill="freeze"/>
+    <animateTransform attributeName="transform" type="translate" from="0 8" to="0 0" begin="0.4s" dur="0.8s" fill="freeze"/>
+    <text x="440" y="192" text-anchor="middle" font-size="17" font-weight="500" fill="#6E6E73">去审查(abliteration)不只是移除拒绝——它沉默地改变乐观度 · 语气 · 风险规避</text>
+    <text x="440" y="216" text-anchor="middle" font-size="13" font-weight="500" fill="#8A8A90">本地 Ollama 模型配对审计 · 发布前的行为漂移门禁</text>
+  </g>
+  <!-- 域色脉冲点（装饰，无限循环）：紫 + 青 -->
+  <circle cx="428" cy="248" r="3" fill="#5E5CE6">
+    <animate attributeName="opacity" values="0.35;1;0.35" keyTimes="0;0.5;1" dur="2.4s"
+             calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="452" cy="248" r="3" fill="#10A37F">
+    <animate attributeName="opacity" values="0.35;1;0.35" keyTimes="0;0.5;1" dur="2.4s" begin="-1.2s"
+             calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+  </circle>
+</svg>

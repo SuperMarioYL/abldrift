@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 360" width="880" height="360"
+     font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif"
+     role="img" aria-label="abldrift 流程：probe set → runner(base+modified paired · Ollama) → judge(LLM-as-judge pinned) → delta vector(bootstrap CI) → delta.md/json">
+  <defs>
+    <marker id="ah-d" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#5A5A66"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="880" height="360" fill="#1D1D1F"/>
+
+  <!-- ── 底层静态连线 + 箭头 ───────────────────────────────────────── -->
+  <g stroke="#3A3A44" stroke-width="1.5" fill="none">
+    <line x1="168" y1="180" x2="204" y2="180" marker-end="url(#ah-d)"/>
+    <line x1="366" y1="180" x2="402" y2="180" marker-end="url(#ah-d)"/>
+    <line x1="564" y1="180" x2="600" y2="180" marker-end="url(#ah-d)"/>
+    <line x1="720" y1="180" x2="748" y2="180" marker-end="url(#ah-d)"/>
+  </g>
+
+  <!-- ── 行军虚线数据流（周期16，from 32→0；负 begin 错峰）───────────── -->
+  <g stroke-width="1.5" fill="none" stroke-linecap="round">
+    <line x1="168" y1="180" x2="202" y2="180" stroke="#8985FF" stroke-opacity="0.55" stroke-dasharray="6 10">
+      <animate attributeName="stroke-dashoffset" from="32" to="0" dur="1.6s" repeatCount="indefinite"/>
+    </line>
+    <line x1="366" y1="180" x2="400" y2="180" stroke="#2DC79A" stroke-opacity="0.55" stroke-dasharray="6 10">
+      <animate attributeName="stroke-dashoffset" from="32" to="0" dur="1.6s" begin="-0.4s" repeatCount="indefinite"/>
+    </line>
+    <line x1="564" y1="180" x2="598" y2="180" stroke="#8985FF" stroke-opacity="0.55" stroke-dasharray="6 10">
+      <animate attributeName="stroke-dashoffset" from="32" to="0" dur="1.6s" begin="-0.8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="720" y1="180" x2="746" y2="180" stroke="#2DC79A" stroke-opacity="0.55" stroke-dasharray="6 10">
+      <animate attributeName="stroke-dashoffset" from="32" to="0" dur="1.6s" begin="-1.2s" repeatCount="indefinite"/>
+    </line>
+  </g>
+
+  <!-- ── 数据包圆点沿连线流动 ─────────────────────────────────────── -->
+  <g>
+    <circle r="3" fill="#8985FF">
+      <animateMotion path="M168,180 L202,180" dur="2.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3" fill="#2DC79A">
+      <animateMotion path="M366,180 L400,180" dur="2.4s" begin="-0.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="2.4s" begin="-0.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3" fill="#8985FF">
+      <animateMotion path="M564,180 L598,180" dur="2.4s" begin="-1.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="2.4s" begin="-1.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3" fill="#2DC79A">
+      <animateMotion path="M720,180 L746,180" dur="2.4s" begin="-1.8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="2.4s" begin="-1.8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- ── 节点：呼吸 fill-opacity 0.16↔0.24，负 begin 错峰 ──────────── -->
+  <g>
+    <rect x="16" y="138" width="152" height="84" rx="15" fill="#8985FF" fill-opacity="0.16" stroke="#8985FF" stroke-width="1.5">
+      <animate attributeName="fill-opacity" values="0.16;0.24;0.16" keyTimes="0;0.5;1" dur="3.2s"
+               calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+    </rect>
+    <text x="92" y="174" text-anchor="middle" font-size="14" font-weight="600" fill="#8985FF">probe set</text>
+    <text x="92" y="196" text-anchor="middle" font-size="12" font-weight="500" fill="#A1A1A8">30 · non-refusal</text>
+  </g>
+  <g>
+    <rect x="204" y="138" width="162" height="84" rx="15" fill="#2DC79A" fill-opacity="0.16" stroke="#2DC79A" stroke-width="1.5">
+      <animate attributeName="fill-opacity" values="0.16;0.24;0.16" keyTimes="0;0.5;1" dur="3.2s" begin="-0.8s"
+               calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+    </rect>
+    <text x="285" y="174" text-anchor="middle" font-size="14" font-weight="600" fill="#2DC79A">runner</text>
+    <text x="285" y="196" text-anchor="middle" font-size="12" font-weight="500" fill="#A1A1A8">base + modified · Ollama</text>
+  </g>
+  <g>
+    <rect x="402" y="138" width="162" height="84" rx="15" fill="#8985FF" fill-opacity="0.16" stroke="#8985FF" stroke-width="1.5">
+      <animate attributeName="fill-opacity" values="0.16;0.24;0.16" keyTimes="0;0.5;1" dur="3.2s" begin="-1.6s"
+               calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+    </rect>
+    <text x="483" y="174" text-anchor="middle" font-size="14" font-weight="600" fill="#8985FF">judge</text>
+    <text x="483" y="196" text-anchor="middle" font-size="12" font-weight="500" fill="#A1A1A8">LLM-as-judge · pinned</text>
+  </g>
+  <g>
+    <rect x="600" y="138" width="120" height="84" rx="15" fill="#2DC79A" fill-opacity="0.16" stroke="#2DC79A" stroke-width="1.5">
+      <animate attributeName="fill-opacity" values="0.16;0.24;0.16" keyTimes="0;0.5;1" dur="3.2s" begin="-2.4s"
+               calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+    </rect>
+    <text x="660" y="174" text-anchor="middle" font-size="14" font-weight="600" fill="#2DC79A">delta vector</text>
+    <text x="660" y="196" text-anchor="middle" font-size="12" font-weight="500" fill="#A1A1A8">bootstrap 95% CI</text>
+  </g>
+  <g>
+    <rect x="748" y="138" width="116" height="84" rx="15" fill="#8985FF" fill-opacity="0.16" stroke="#8985FF" stroke-width="1.5">
+      <animate attributeName="fill-opacity" values="0.16;0.24;0.16" keyTimes="0;0.5;1" dur="3.2s" begin="-3.0s"
+               calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" repeatCount="indefinite"/>
+    </rect>
+    <text x="806" y="170" text-anchor="middle" font-size="14" font-weight="600" fill="#8985FF">delta.md</text>
+    <text x="806" y="190" text-anchor="middle" font-size="11" font-weight="500" fill="#A1A1A8">JSON · CI gate</text>
+    <text x="806" y="208" text-anchor="middle" font-size="11" font-weight="600" fill="#2DC79A">exit 0/1 ✓</text>
+  </g>
+
+  <text x="16" y="58" font-size="18" font-weight="700" fill="#F5F5F7">abldrift 流程</text>
+  <text x="16" y="82" font-size="13" font-weight="500" fill="#A1A1A8">配对跑 base + modified 30 条 non-refusal 探针，judge 打分，算行为 delta + bootstrap CI，输出报告与门禁退出码</text>
+  <text x="16" y="320" font-size="12" font-weight="500" fill="#7C7C84">配对打分消去 judge 绝对偏置 · 报 bootstrap CI 而非点估计 · 只依赖用户本地 Ollama，无第三方服务</text>
+</svg>

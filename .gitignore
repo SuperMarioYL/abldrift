@@ -1,0 +1,51 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Packaging / build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Test / coverage caches
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# Type-checker / linter caches
+.mypy_cache/
+.ruff_cache/
+
+# Generated reports (per-run artifacts)
+delta.md
+delta.json
+
+# Editor / OS cruft
+.idea/
+.vscode/
+.DS_Store
+
+# Agent config
+.claude/
+CLAUDE.md
+
+# build scratch
+PUBLISH_BLOCKED.md
+BUILD_SETUP_NEXT_STEPS.md
+DRIFT_REPORT.md
+GIT_AUTHOR_DRIFT.md
+.spawn.*
+.builder_*
+.build_metadata*
+.stage_*
+_build_ctx*

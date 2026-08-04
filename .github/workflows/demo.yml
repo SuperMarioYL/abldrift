@@ -1,0 +1,51 @@
+name: demo
+
+# Re-renders the committed demo GIF on demand. The committed assets/demo.gif is
+# the source of truth for the README; this workflow only refreshes it by hand,
+# so a flaky render can never block a release. NOT triggered on tag push.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  vhs:
+    name: Re-render docs/demo.tape → assets/demo.gif
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install abldrift
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      # vhs-action's self-install of ffmpeg is broken on current runners; install
+      # the toolchain deterministically from the charm apt repo instead.
+      - name: Install vhs + ttyd + ffmpeg (apt)
+        run: |
+          sudo mkdir -p /etc/apt/keyrings
+          curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list >/dev/null
+          sudo apt-get update && sudo apt-get install -y vhs ttyd ffmpeg
+
+      - name: Render demo.tape
+        run: vhs docs/demo.tape
+
+      - name: Commit the regenerated GIF
+        run: |
+          git config user.name  "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git add assets/demo.gif
+          if git diff --cached --quiet; then
+            echo "demo.gif unchanged; nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore: render demo gif"
+          git push origin HEAD:${{ github.ref_name }}
