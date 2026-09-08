@@ -1,0 +1,78 @@
+{
+  "name": "abldrift",
+  "tagline": "See how paired behavioral scores change.",
+  "architecture": {
+    "title": "Paired scores become a delta report",
+    "nodes": [
+      {
+        "title": "Probe YAML",
+        "detail": "30 prompts / three dimensions"
+      },
+      {
+        "title": "Runner and judge",
+        "detail": "Ollama response scoring"
+      },
+      {
+        "title": "Delta calculation",
+        "detail": "Paired differences / bootstrap"
+      },
+      {
+        "title": "Report",
+        "detail": "Markdown / JSON / threshold"
+      }
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ]
+    ]
+  },
+  "process": {
+    "title": "Inspect the offline score calculation",
+    "steps": [
+      {
+        "title": "Synthetic input",
+        "detail": "30 equal score pairs"
+      },
+      {
+        "title": "Compute deltas",
+        "detail": "+1.0 / +0.8 / +0.6"
+      },
+      {
+        "title": "Change tolerance",
+        "detail": "0.5 to 1.1"
+      }
+    ],
+    "result": "The verdict changes with tolerance; the same deltas and intervals remain."
+  },
+  "integrations": {
+    "title": "Inputs and outputs",
+    "items": [
+      {
+        "title": "YAML probes",
+        "detail": "Custom question sets"
+      },
+      {
+        "title": "Ollama",
+        "detail": "Base / modified / judge"
+      },
+      {
+        "title": "JSON and Markdown",
+        "detail": "Report serialization"
+      },
+      {
+        "title": "CLI",
+        "detail": "Run / selftest / probes"
+      }
+    ]
+  }
+}

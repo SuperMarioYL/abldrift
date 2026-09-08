@@ -1,112 +1,250 @@
 {
-  "schema": 1,
+  "schema": 3,
   "name": "abldrift",
   "github": "https://github.com/SuperMarioYL/abldrift",
   "host": "abldrift.lei6393.com",
+  "palette": "auto",
   "lang": {
     "primary": "zh",
     "toggle": true
   },
-  "accent": [
-    "#2dd4bf",
-    "#5eead4",
-    "#0d9488"
-  ],
+  "meta": {
+    "visual_profile": "neon-particle",
+    "content_version": "0.1.0",
+    "demo_source": "docs/demo-results.json"
+  },
   "hero": {
     "eyebrow": {
-      "zh": "发布前 · 行为漂移 · 一条命令",
-      "en": "Pre-release · Behavioral drift · One command"
+      "zh": "比较基线与修改版的乐观度、语气和风险规避评分，生成可检查的漂移报告。",
+      "en": "Compare baseline and modified-model scores for optimism, tone and risk aversion in an inspectable drift report."
     },
     "headline": {
-      "zh": "改了模型，先看清它悄悄变了什么\n再决定要不要发布",
-      "en": "See what your modified model quietly became\nbefore you ship it"
+      "zh": "看清模型行为评分的变化。",
+      "en": "See how behavioral scores change."
     },
     "sub": {
-      "zh": "用 30 个探针对比原模型与去审查模型，量化乐观度、语气、风险规避的沉默漂移，生成可复现的发布前报告。",
-      "en": "Probe your base vs. uncensored model across 30 prompts; quantify the silent optimism, tone, and risk-aversion drift into a reproducible pre-release report."
+      "zh": "比较基线与修改版的乐观度、语气和风险规避评分，生成可检查的漂移报告。",
+      "en": "Compare baseline and modified-model scores for optimism, tone and risk aversion in an inspectable drift report."
     },
-    "command": "abldrift run --base llama3 --modified llama3-abliterated"
+    "href": "#quickstart",
+    "cta": {
+      "zh": "运行示例",
+      "en": "Run the example"
+    },
+    "ctaGithub": {
+      "zh": "查看源码",
+      "en": "View source"
+    }
+  },
+  "scene": {
+    "kind": "neon-graph",
+    "caption": {
+      "zh": "图示展示组件关系；实际输出见下方示例。",
+      "en": "An illustrative component scene; recorded output appears below."
+    },
+    "fallback": "/assets/presentation/scene-dark.svg",
+    "fallbackLight": "/assets/presentation/scene-light.svg"
   },
   "advantages": [
     {
       "title": {
-        "zh": "发布前就抓到沉默漂移",
-        "en": "Catch silent drift before release"
+        "zh": "逐项查看",
+        "en": "Inspect each dimension"
       },
       "body": {
-        "zh": "去审查(abliterate)不只是去掉拒绝——它常常把模型的整体语气、乐观度、风险规避一起改了。在发布前就把这层漂移量化出来，而不是等用户投诉。",
-        "en": "Abliterating a model doesn't just strip refusals — it often shifts the whole tone, optimism, and risk-aversion. Quantify that drift before release, not after user complaints."
-      },
-      "chips": [
-        "› 30 探针对比",
-        "› 乐观度 · 语气 · 风险"
-      ]
+        "zh": "保留每条问题的评分差。",
+        "en": "Keep score differences for every prompt."
+      }
     },
     {
       "title": {
-        "zh": "一条命令出报告",
-        "en": "A report in one command"
+        "zh": "明确阈值",
+        "en": "Explicit threshold"
       },
       "body": {
-        "zh": "跑一次，拿到 delta.md 和 delta.json——人能读的摘要加机器能用的向量，可以直接卡进发布流程当出口闸。",
-        "en": "Run once, get delta.md and delta.json — a human-readable summary plus a machine-usable vector you can wire straight into your release gate."
-      },
-      "chips": [
-        "› delta.md + JSON",
-        "› <60 秒"
-      ]
+        "zh": "容差与置信区间分别展示。",
+        "en": "Tolerance and intervals have distinct meanings."
+      }
     },
     {
       "title": {
-        "zh": "本地跑，模型不出门",
-        "en": "Runs locally, your model never leaves"
-      },
-      "zh_body_note": "local-ollama",
-      "body": {
-        "zh": "直接对本地模型对跑，不上传权重，不调云——你的模型和探针响应全程留在本机。",
-        "en": "Probes run directly against your local models — no weight uploads, no cloud calls. Your model and its responses stay on your machine."
-      },
-      "chips": [
-        "› 本地模型",
-        "› 无云上传"
-      ]
-    },
-    {
-      "title": {
-        "zh": "可重复，能定基线",
-        "en": "Reproducible, baseline-able"
+        "zh": "先离线运行",
+        "en": "Start offline"
       },
       "body": {
-        "zh": "种子可复现，每一次漂移向量都能和上一次比；把它放进 CI，漂移超阈值就拦下这次发布。",
-        "en": "Seeded for reproducibility — every drift vector compares against the last. Drop it into CI and block a release when drift crosses your threshold."
-      },
-      "chips": [
-        "› 种子可复现",
-        "› CI 出口闸"
-      ]
+        "zh": "合成评分可复现计算路径。",
+        "en": "Synthetic scores exercise the calculation path."
+      }
     }
   ],
-  "scene": {
-    "kind": "particle-field"
+  "story": {
+    "intro": {
+      "title": {
+        "zh": "解决什么问题",
+        "en": "The task it solves"
+      },
+      "body": {
+        "zh": "模型修改后，回答风格可能发生变化。abldrift 把同一组问题的两份评分逐条对齐，用三个维度的均值差和重采样区间展示变化，便于发布前审阅。评分来自评审模型，结果仍取决于问题集和评分质量。",
+        "en": "A model change can alter how it answers. abldrift aligns scores for the same prompts and presents mean changes and resampling intervals on three dimensions for release review. Scores come from a judge model, so the result remains dependent on the probes and the quality of that judge."
+      }
+    },
+    "sections": [
+      {
+        "title": {
+          "zh": "从输入到结果",
+          "en": "From input to result"
+        },
+        "body": {
+          "zh": "两个命令使用内置合成分数，验证 delta、bootstrap 和容差判定。没有调用实际模型；selftest 的退出码均为 0，不是 run 的 CI 退出码演示。",
+          "en": "Two commands use built-in synthetic scores to exercise deltas, bootstrap intervals and tolerance decisions. No real model is called. selftest exits 0 in both cases; this does not demonstrate run’s CI exit behavior."
+        },
+        "image": {
+          "light": "/assets/presentation/process-light.svg",
+          "dark": "/assets/presentation/process-dark.svg",
+          "alt": {
+            "zh": "两个命令使用内置合成分数，验证 delta、bootstrap 和容差判定。没有调用实际模型；selftest 的退出码均为 0，不是 run 的 CI 退出码演示。",
+            "en": "Two commands use built-in synthetic scores to exercise deltas, bootstrap intervals and tolerance decisions. No real model is called. selftest exits 0 in both cases; this does not demonstrate run’s CI exit behavior."
+          }
+        }
+      },
+      {
+        "title": {
+          "zh": "工作原理",
+          "en": "How it works"
+        },
+        "body": {
+          "zh": "探针 YAML 定义问题与维度；runner 通过 Ollama 获取两组回答并交给同一 judge。delta 模块计算 modified − base，report 输出表格、Markdown 和 JSON。门禁依据均值差是否超过 tolerance，置信区间是单独展示的统计信息。",
+          "en": "Probe YAML defines questions and dimensions. The runner obtains paired Ollama responses and sends them to one judge. The delta module computes modified minus base; the reporter emits tables, Markdown and JSON. The gate compares mean deltas with tolerance; confidence intervals are displayed separately."
+        },
+        "image": {
+          "light": "/assets/presentation/architecture-light.svg",
+          "dark": "/assets/presentation/architecture-dark.svg",
+          "alt": {
+            "zh": "探针 YAML 定义问题与维度；runner 通过 Ollama 获取两组回答并交给同一 judge。delta 模块计算 modified − base，report 输出表格、Markdown 和 JSON。门禁依据均值差是否超过 tolerance，置信区间是单独展示的统计信息。",
+            "en": "Probe YAML defines questions and dimensions. The runner obtains paired Ollama responses and sends them to one judge. The delta module computes modified minus base; the reporter emits tables, Markdown and JSON. The gate compares mean deltas with tolerance; confidence intervals are displayed separately."
+          }
+        }
+      },
+      {
+        "title": {
+          "zh": "能力与接入",
+          "en": "Capabilities and integration"
+        },
+        "body": {
+          "zh": "离线 selftest 只执行评分计算。完整 run 路径面向 Ollama；报告用于审阅或流水线消费。它不修改模型，也不评估所有安全性或任务能力。",
+          "en": "The offline selftest executes score calculations. The full run path targets Ollama, with reports for review or pipeline consumption. It does not modify models or evaluate all safety and task capabilities."
+        },
+        "image": {
+          "light": "/assets/presentation/integrations-light.svg",
+          "dark": "/assets/presentation/integrations-dark.svg",
+          "alt": {
+            "zh": "离线 selftest 只执行评分计算。完整 run 路径面向 Ollama；报告用于审阅或流水线消费。它不修改模型，也不评估所有安全性或任务能力。",
+            "en": "The offline selftest executes score calculations. The full run path targets Ollama, with reports for review or pipeline consumption. It does not modify models or evaluate all safety and task capabilities."
+          }
+        }
+      }
+    ],
+    "details": [
+      {
+        "title": {
+          "zh": "使用方式",
+          "en": "Usage"
+        },
+        "body": {
+          "zh": "离线 selftest 只执行评分计算。完整 run 路径面向 Ollama；报告用于审阅或流水线消费。它不修改模型，也不评估所有安全性或任务能力。",
+          "en": "The offline selftest executes score calculations. The full run path targets Ollama, with reports for review or pipeline consumption. It does not modify models or evaluate all safety and task capabilities."
+        }
+      },
+      {
+        "title": {
+          "zh": "配置",
+          "en": "Configuration"
+        },
+        "body": {
+          "zh": "`--tolerance=0.5` 控制绝对均值差阈值，`--n-boot=2000` 与 `--seed=42` 控制重采样。`--probes` 指向 YAML，`--host` 指定 Ollama 地址。每条评分范围为 1–5；无法解析的 judge 输出会退回中性分数，因此应结合原始输出审阅。",
+          "en": "`--tolerance=0.5` controls the absolute mean-change threshold. `--n-boot=2000` and `--seed=42` control resampling. `--probes` selects YAML and `--host` selects Ollama. Scores range from 1 to 5; unparseable judge output falls back to neutral scores, so review the underlying responses."
+        }
+      }
+    ]
   },
-  "cta": {
-    "headline": {
-      "zh": "下一次发模型前，先审一次",
-      "en": "Audit your next model before it ships"
+  "demo": {
+    "title": {
+      "zh": "实际运行结果",
+      "en": "Actual demo output"
     },
-    "sub": {
-      "zh": "本地一条命令，60 秒拿到漂移报告。",
-      "en": "One local command, a drift report in 60 seconds."
+    "note": {
+      "zh": "两个命令使用内置合成分数，验证 delta、bootstrap 和容差判定。没有调用实际模型；selftest 的退出码均为 0，不是 run 的 CI 退出码演示。",
+      "en": "Two commands use built-in synthetic scores to exercise deltas, bootstrap intervals and tolerance decisions. No real model is called. selftest exits 0 in both cases; this does not demonstrate run’s CI exit behavior."
     },
-    "button": {
-      "zh": "在 GitHub 上看",
-      "en": "See it on GitHub"
+    "source": "https://github.com/SuperMarioYL/abldrift/blob/main/docs/demo-results.json",
+    "steps": [
+      {
+        "label": {
+          "zh": "默认容差",
+          "en": "Default tolerance"
+        },
+        "body": {
+          "zh": "均值差在三个维度上都超过 0.5。",
+          "en": "Mean changes exceed 0.5 on all three dimensions."
+        },
+        "command": ".venv/bin/abldrift selftest --seed 42 --tolerance 0.5",
+        "output": "  abldrift — synthetic-base → synthetic-modified  (judge:  \n                          (none))                          \n┏━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓\n┃ dimension     ┃  delta ┃           95% CI ┃ excludes 0? ┃\n┡━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩\n│ optimism      │ +1.000 │ [+1.000, +1.000] │     yes     │\n│ tone          │ +0.800 │ [+0.800, +0.800] │     yes     │\n│ risk_aversion │ +0.600 │ [+0.600, +0.600] │     yes     │\n└───────────────┴────────┴──────────────────┴─────────────┘\nverdict: DRIFT DETECTED  (tolerance ±0.5, n=30)\noptimism: delta=+1.000 CI=[+1.000,+1.000] excludes0=True\ntone: delta=+0.800 CI=[+0.800,+0.800] excludes0=True\nrisk_aversion: delta=+0.600 CI=[+0.600,+0.600] excludes0=True\n",
+        "image": "/assets/presentation/demo-0-light.svg",
+        "imageDark": "/assets/presentation/demo-0-dark.svg"
+      },
+      {
+        "label": {
+          "zh": "增大容差",
+          "en": "Raise the tolerance"
+        },
+        "body": {
+          "zh": "容差变为 1.1 后判定通过，分数与区间没有变化。",
+          "en": "A tolerance of 1.1 passes while scores and intervals stay unchanged."
+        },
+        "command": ".venv/bin/abldrift selftest --seed 42 --tolerance 1.1",
+        "output": "  abldrift — synthetic-base → synthetic-modified  (judge:  \n                          (none))                          \n┏━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓\n┃ dimension     ┃  delta ┃           95% CI ┃ excludes 0? ┃\n┡━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩\n│ optimism      │ +1.000 │ [+1.000, +1.000] │     yes     │\n│ tone          │ +0.800 │ [+0.800, +0.800] │     yes     │\n│ risk_aversion │ +0.600 │ [+0.600, +0.600] │     yes     │\n└───────────────┴────────┴──────────────────┴─────────────┘\nverdict: within tolerance  (tolerance ±1.1, n=30)\noptimism: delta=+1.000 CI=[+1.000,+1.000] excludes0=True\ntone: delta=+0.800 CI=[+0.800,+0.800] excludes0=True\nrisk_aversion: delta=+0.600 CI=[+0.600,+0.600] excludes0=True\n",
+        "image": "/assets/presentation/demo-1-light.svg",
+        "imageDark": "/assets/presentation/demo-1-dark.svg"
+      }
+    ]
+  },
+  "quickstart": {
+    "title": {
+      "zh": "从完整输入开始",
+      "en": "Start with complete input"
+    },
+    "body": {
+      "zh": "源码安装需要 Python 3.12+ 与 uv。下面的 selftest 无需 Ollama；在线审计需另行准备实际可用的模型标签与服务。",
+      "en": "Source installation requires Python 3.12+ and uv. The selftest below needs no Ollama; live auditing additionally requires a running service and actual installed model tags."
+    },
+    "steps": [
+      {
+        "title": {
+          "zh": "安装",
+          "en": "Install"
+        },
+        "code": "git clone https://github.com/SuperMarioYL/abldrift.git\ncd abldrift\nuv venv --python 3.12\nuv pip install --python .venv/bin/python -e ."
+      },
+      {
+        "title": {
+          "zh": "运行自带示例",
+          "en": "Run the supplied example"
+        },
+        "code": ".venv/bin/abldrift selftest --seed 42 --tolerance 0.5\n.venv/bin/abldrift selftest --seed 42 --tolerance 1.1"
+      }
+    ]
+  },
+  "limitations": [
+    {
+      "zh": "配对 judge 不保证消除评分偏差，bootstrap 区间也不证明模型修改导致了真实世界效果。",
+      "en": "A paired judge does not guarantee removal of scoring bias; bootstrap intervals do not establish real-world effects of a model modification."
+    },
+    {
+      "zh": "当前真实 Ollama run 链路存在 ScoredResponse 与 ResponseScore 接口不匹配；此示例仅覆盖可运行的离线核心。",
+      "en": "The current live Ollama run path has a ScoredResponse/ResponseScore interface mismatch; this example covers the working offline core."
     }
-  },
+  ],
   "footer": {
-    "tag": {
-      "zh": "MIT · 本地优先 · 开源",
-      "en": "MIT · Local-first · Open source"
-    }
+    "tag": "0.1.0 · Python 3.12+ · MIT"
   }
 }

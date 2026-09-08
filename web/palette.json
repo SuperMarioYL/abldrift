@@ -1,0 +1,38 @@
+{
+  "mode": "auto",
+  "id": "e656d3-e76a93-e5acf6-ab081ca92c6c",
+  "identity": "https://github.com/supermarioyl/abldrift",
+  "primary": "#e656d3",
+  "secondary": "#e76a93",
+  "highlight": "#e5acf6",
+  "dark": {
+    "bg": "#0a0711",
+    "panel": "#13101e",
+    "code": "#140d1c",
+    "ink": "#faeefd",
+    "muted": "#b29cc1",
+    "line": "#3a183c",
+    "primary": "#e656d3",
+    "secondary": "#e76a93",
+    "highlight": "#e5acf6",
+    "accent": "#e656d3",
+    "buttonStart": "#bd46ad",
+    "buttonEnd": "#ba5577",
+    "buttonText": "#ffffff"
+  },
+  "light": {
+    "bg": "#fef9fd",
+    "panel": "#fef7fd",
+    "code": "#fdf3fc",
+    "ink": "#27162d",
+    "muted": "#725e84",
+    "line": "#f7cbf1",
+    "primary": "#b443a6",
+    "secondary": "#b25171",
+    "highlight": "#876591",
+    "accent": "#b443a6",
+    "buttonStart": "#bd46ad",
+    "buttonEnd": "#ba5577",
+    "buttonText": "#ffffff"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "version": "0.1.0",
+  "scope": "Offline synthetic-score delta and bootstrap calculation at two tolerances; no Ollama, real model, or judge was called. selftest always exits 0.",
+  "inputs": [
+    {
+      "path": "examples/presentation-demo.sh",
+      "sha256": "303fbc611ef413f5c3afc49103ea80efc6cd0b96af9a7f257ea045682e395bb2"
+    },
+    {
+      "path": "abldrift/data/probes.yaml",
+      "sha256": "4e784773f9d8f645a29ecd4192c9a3c04ce78e9b94e8a6e5dc0001b1260661c2"
+    }
+  ],
+  "steps": [
+    {
+      "command": ".venv/bin/abldrift selftest --seed 42 --tolerance 0.5",
+      "output": "  abldrift — synthetic-base → synthetic-modified  (judge:  \n                          (none))                          \n┏━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓\n┃ dimension     ┃  delta ┃           95% CI ┃ excludes 0? ┃\n┡━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩\n│ optimism      │ +1.000 │ [+1.000, +1.000] │     yes     │\n│ tone          │ +0.800 │ [+0.800, +0.800] │     yes     │\n│ risk_aversion │ +0.600 │ [+0.600, +0.600] │     yes     │\n└───────────────┴────────┴──────────────────┴─────────────┘\nverdict: DRIFT DETECTED  (tolerance ±0.5, n=30)\noptimism: delta=+1.000 CI=[+1.000,+1.000] excludes0=True\ntone: delta=+0.800 CI=[+0.800,+0.800] excludes0=True\nrisk_aversion: delta=+0.600 CI=[+0.600,+0.600] excludes0=True\n",
+      "exit_code": 0
+    },
+    {
+      "command": ".venv/bin/abldrift selftest --seed 42 --tolerance 1.1",
+      "output": "  abldrift — synthetic-base → synthetic-modified  (judge:  \n                          (none))                          \n┏━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓\n┃ dimension     ┃  delta ┃           95% CI ┃ excludes 0? ┃\n┡━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩\n│ optimism      │ +1.000 │ [+1.000, +1.000] │     yes     │\n│ tone          │ +0.800 │ [+0.800, +0.800] │     yes     │\n│ risk_aversion │ +0.600 │ [+0.600, +0.600] │     yes     │\n└───────────────┴────────┴──────────────────┴─────────────┘\nverdict: within tolerance  (tolerance ±1.1, n=30)\noptimism: delta=+1.000 CI=[+1.000,+1.000] excludes0=True\ntone: delta=+0.800 CI=[+0.800,+0.800] excludes0=True\nrisk_aversion: delta=+0.600 CI=[+0.600,+0.600] excludes0=True\n",
+      "exit_code": 0
+    }
+  ]
+}
