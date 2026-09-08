@@ -104,6 +104,10 @@
           "alt": {
             "zh": "两个命令使用内置合成分数，验证 delta、bootstrap 和容差判定。没有调用实际模型；selftest 的退出码均为 0，不是 run 的 CI 退出码演示。",
             "en": "Two commands use built-in synthetic scores to exercise deltas, bootstrap intervals and tolerance decisions. No real model is called. selftest exits 0 in both cases; this does not demonstrate run’s CI exit behavior."
+          },
+          "mobile": {
+            "light": "/assets/presentation/process-mobile-light.svg",
+            "dark": "/assets/presentation/process-mobile-dark.svg"
           }
         }
       },
@@ -122,6 +126,10 @@
           "alt": {
             "zh": "探针 YAML 定义问题与维度；runner 通过 Ollama 获取两组回答并交给同一 judge。delta 模块计算 modified − base，report 输出表格、Markdown 和 JSON。门禁依据均值差是否超过 tolerance，置信区间是单独展示的统计信息。",
             "en": "Probe YAML defines questions and dimensions. The runner obtains paired Ollama responses and sends them to one judge. The delta module computes modified minus base; the reporter emits tables, Markdown and JSON. The gate compares mean deltas with tolerance; confidence intervals are displayed separately."
+          },
+          "mobile": {
+            "light": "/assets/presentation/architecture-mobile-light.svg",
+            "dark": "/assets/presentation/architecture-mobile-dark.svg"
           }
         }
       },
@@ -140,6 +148,10 @@
           "alt": {
             "zh": "离线 selftest 只执行评分计算。完整 run 路径面向 Ollama；报告用于审阅或流水线消费。它不修改模型，也不评估所有安全性或任务能力。",
             "en": "The offline selftest executes score calculations. The full run path targets Ollama, with reports for review or pipeline consumption. It does not modify models or evaluate all safety and task capabilities."
+          },
+          "mobile": {
+            "light": "/assets/presentation/integrations-mobile-light.svg",
+            "dark": "/assets/presentation/integrations-mobile-dark.svg"
           }
         }
       }
