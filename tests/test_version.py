@@ -1,6 +1,6 @@
 """Version-lockstep test — every version surface must agree on the shipped version.
 
-Surfaces covered (see m7_version_bump_v0.2.0): the ``VERSION`` file,
+Surfaces covered (see the version-bump milestone): the ``VERSION`` file,
 ``pyproject.toml`` [project].version, ``abldrift.__version__`` (which feeds
 ``abldrift --version`` via click.version_option). The CHANGELOG entry and
 web/site.json meta.content_version are repo surfaces checked by grep in the
@@ -18,7 +18,7 @@ from abldrift import __version__
 from abldrift.cli import main
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-EXPECTED = "0.2.0"
+EXPECTED = "0.2.1"
 
 
 def test_dunder_version_is_lockstep():

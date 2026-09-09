@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-09
+
+### Fixed
+
+- **`abldrift run` now completes against a live Ollama daemon.** The paired
+  runner produces `ScoredResponse` records (numbers nested in `.score`), but
+  `compute_delta` read `optimism`/`tone`/`risk_aversion` off them directly —
+  the entire live run path raised `AttributeError` after every probe and
+  judge call, so `delta.md` could never be produced. `compute_delta` now
+  unwraps `ScoredResponse` records (and still accepts bare `ResponseScore`
+  or any object with the three attributes), preserving per-prompt probe ids
+  for the report table.
+- **`--json` stdout is machine-parseable.** Progress lines ("running base
+  probes…") shared stdout with the JSON payload, so the documented
+  `abldrift run --json --no-write | jq …` pipe failed to parse. In `--json`
+  mode progress now goes to stderr; stdout carries only the JSON document.
+- New integration tests exercise the full run pipeline (runner → delta →
+  report) with a stubbed Ollama client — the seam every previous release
+  shipped without testing.
+
 ## [0.2.0] - 2026-09-09
 
 ### Fixed
@@ -73,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `README.en.md`, animated dark/light hero + atlas SVG pairs (SMIL), shields.io
   badge row, Tabler-icon headers.
 
-[Unreleased]: https://github.com/SuperMarioYL/abldrift/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/SuperMarioYL/abldrift/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.2.1
 [0.2.0]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.2.0
 [0.1.0]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.1.0
