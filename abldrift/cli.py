@@ -19,6 +19,9 @@ from abldrift.probes import DEFAULT_PROBES_PATH, load_probes
 from abldrift.report import print_summary, render_json, write_reports
 
 console = Console()
+# Progress lines must never share stdout with the --json payload — the README
+# quickstart pipes `abldrift run --json --no-write | jq ...`.
+stderr_console = Console(stderr=True)
 
 
 def _ollama_error_types() -> tuple[type[BaseException], ...]:
@@ -57,17 +60,18 @@ def _load_probes_or_exit(probes_path):
         sys.exit(2)
 
 
-def _run_audit(base, modified, judge, probes_path, host, tolerance, n_boot, seed):
+def _run_audit(base, modified, judge, probes_path, host, tolerance, n_boot, seed, as_json=False):
     """Run the full paired audit and return the DeltaVector (shared by run/selftest)."""
     from abldrift.runner import run_paired_audit
 
     probes = _load_probes_or_exit(probes_path)
+    out = stderr_console if as_json else console
 
     def progress(done, total, label):
         if done == 0 or done == total:
-            console.print(f"[dim]{label}[/dim]")
+            out.print(f"[dim]{label}[/dim]")
         elif done % max(1, total // 5) == 0:
-            console.print(f"[dim]{label} ({done}/{total})[/dim]")
+            out.print(f"[dim]{label} ({done}/{total})[/dim]")
 
     base_scores, modified_scores = run_paired_audit(
         base_model=base,
@@ -109,7 +113,8 @@ def run(base, modified, judge, probes_path, host, tolerance, n_boot, seed, as_js
     judge_model = judge or base
     try:
         delta = _run_audit(
-            base, modified, judge_model, probes_path, host, tolerance, n_boot, seed
+            base, modified, judge_model, probes_path, host, tolerance, n_boot, seed,
+            as_json=as_json,
         )
     # ConnectionError is an OSError subclass, so the Ollama clause must match
     # first; probe-set/file errors (ValueError, OSError) fall through below.

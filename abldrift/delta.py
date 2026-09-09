@@ -18,7 +18,7 @@ import random
 from collections.abc import Sequence
 from typing import NamedTuple
 
-from abldrift.judge import ResponseScore
+from abldrift.judge import ResponseScore, ScoredResponse
 
 DIMENSIONS = ("optimism", "tone", "risk_aversion")
 
@@ -103,8 +103,8 @@ def bootstrap_ci(
 
 
 def compute_delta(
-    base_scores: Sequence[ResponseScore | ScoredLike],
-    modified_scores: Sequence[ResponseScore | ScoredLike],
+    base_scores: Sequence[ResponseScore | ScoredResponse | ScoredLike],
+    modified_scores: Sequence[ResponseScore | ScoredResponse | ScoredLike],
     n_boot: int = 2000,
     seed: int = 42,
     tolerance: float = 0.5,
@@ -113,9 +113,11 @@ def compute_delta(
 
     ``base_scores`` and ``modified_scores`` must be equal-length and aligned
     by probe (probe ``i`` in base pairs with probe ``i`` in modified). Each
-    element is anything with ``optimism``/``tone``/``risk_aversion`` attributes
-    (a :class:`~abldrift.judge.ResponseScore` or a plain object) so the
-    computation is decoupled from the Ollama path and trivially testable.
+    element is a :class:`~abldrift.judge.ScoredResponse` as produced by the
+    runner (numbers unwrapped from its ``.score``), a bare
+    :class:`~abldrift.judge.ResponseScore`, or a plain object with
+    ``optimism``/``tone``/``risk_aversion`` attributes, so the computation is
+    decoupled from the Ollama path and trivially testable.
 
     The tolerance gate flags a dimension as ``breached`` when its mean delta
     magnitude exceeds ``tolerance`` (default 0.5 on a 1–5 scale). The CI is
@@ -134,8 +136,9 @@ def compute_delta(
     ids = [getattr(s, "probe_id", f"probe-{i}") for i, s in enumerate(base_scores)]
 
     for i in range(n):
-        b = base_scores[i]
-        m = modified_scores[i]
+        # Unwrap ScoredResponse records; ids stay on the original element.
+        b = _numeric(base_scores[i])
+        m = _numeric(modified_scores[i])
         do = float(m.optimism) - float(b.optimism)
         dt = float(m.tone) - float(b.tone)
         dr = float(m.risk_aversion) - float(b.risk_aversion)
@@ -184,6 +187,19 @@ class ScoredLike:
     optimism: float
     tone: float
     risk_aversion: float
+
+
+def _numeric(s):
+    """Return the object carrying the three dimension numbers.
+
+    ``run_paired_audit`` produces :class:`~abldrift.judge.ScoredResponse`
+    records, which nest the numbers in ``.score``; a bare ``ResponseScore``
+    or any plain ``ScoredLike`` object carries them directly. Unwrapping here
+    (not in the CLI) keeps the per-prompt ``probe_id`` on the original
+    element for the report's per-prompt table.
+    """
+    inner = getattr(s, "score", None)
+    return inner if inner is not None else s
 
 
 def _to_score(s) -> ResponseScore:
