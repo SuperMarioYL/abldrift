@@ -61,7 +61,10 @@ def run_probe_set(
             options=opts,
         )
         content = res["message"]["content"] if isinstance(res, dict) else res.message.content
-        out.append(ModelResponse(probe_id=probe.id, text=content))
+        # An empty generation can come back with content=None — degrade to an
+        # empty string rather than raising mid-audit; the judge fallback
+        # (score 3.0, parsed=False) handles it downstream.
+        out.append(ModelResponse(probe_id=probe.id, text=content or ""))
     return out
 
 

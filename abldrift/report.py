@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from jinja2 import Environment, select_autoescape
+from jinja2 import Environment
 from rich.console import Console
 from rich.table import Table
 
@@ -55,8 +55,12 @@ passes a release; treat CI-excludes-0 as the stronger signal.
 
 
 def _jinja_env() -> Environment:
-    # No filesystem templates — render from the inline string above.
-    return Environment(autoescape=select_autoescape(disabled_extensions=("md",)))
+    # No filesystem templates — render from the inline string above. The
+    # template is trusted and produces markdown, so autoescaping must stay
+    # off: select_autoescape would escape from_string templates
+    # (default_for_string=True) and corrupt the report, e.g. a base model
+    # named "llama3:8b&quant" rendered as "llama3:8b&amp;quant".
+    return Environment(autoescape=False)
 
 
 def render_markdown(

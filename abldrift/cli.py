@@ -21,11 +21,47 @@ from abldrift.report import print_summary, render_json, write_reports
 console = Console()
 
 
+def _ollama_error_types() -> tuple[type[BaseException], ...]:
+    """Exception types an Ollama call raises for environment failures.
+
+    ollama>=0.6 wraps a dead/unreachable daemon in the builtin
+    ``ConnectionError`` and raises ``ResponseError`` for HTTP failures
+    (e.g. model not pulled); older clients (>=0.4) leak ``httpx.ConnectError``.
+    ``RuntimeError`` covers the lazy-import guards in runner/judge (ollama
+    package not installed). The CLI turns any of these into a clean error +
+    exit 2 instead of a traceback that would collide with the documented
+    exit-1 drift-breach gate code.
+    """
+    types: list[type[BaseException]] = [ConnectionError, RuntimeError]
+    try:
+        import httpx
+
+        types.append(httpx.ConnectError)
+    except ImportError:  # pragma: no cover - httpx ships with ollama
+        pass
+    try:
+        import ollama
+
+        types.append(ollama.ResponseError)
+    except ImportError:  # pragma: no cover - ollama is a hard runtime dep
+        pass
+    return tuple(types)
+
+
+def _load_probes_or_exit(probes_path):
+    """Load the probe set, exiting 2 with a clean message on bad input."""
+    try:
+        return load_probes(probes_path)
+    except (ValueError, OSError) as exc:
+        console.print(f"[bold red]error:[/bold red] {exc}")
+        sys.exit(2)
+
+
 def _run_audit(base, modified, judge, probes_path, host, tolerance, n_boot, seed):
     """Run the full paired audit and return the DeltaVector (shared by run/selftest)."""
     from abldrift.runner import run_paired_audit
 
-    probes = load_probes(probes_path)
+    probes = _load_probes_or_exit(probes_path)
 
     def progress(done, total, label):
         if done == 0 or done == total:
@@ -75,12 +111,17 @@ def run(base, modified, judge, probes_path, host, tolerance, n_boot, seed, as_js
         delta = _run_audit(
             base, modified, judge_model, probes_path, host, tolerance, n_boot, seed
         )
-    except RuntimeError as exc:
+    # ConnectionError is an OSError subclass, so the Ollama clause must match
+    # first; probe-set/file errors (ValueError, OSError) fall through below.
+    except _ollama_error_types() as exc:
         console.print(f"[bold red]error:[/bold red] {exc}")
         console.print(
             "hint: ensure a local Ollama daemon is running and both models are pulled "
             "(e.g. `ollama pull qwen2.5:7b`)"
         )
+        sys.exit(2)
+    except (ValueError, OSError) as exc:
+        console.print(f"[bold red]error:[/bold red] {exc}")
         sys.exit(2)
 
     if as_json:
@@ -99,7 +140,7 @@ def run(base, modified, judge, probes_path, host, tolerance, n_boot, seed, as_js
 @click.option("--probes", "probes_path", default=str(DEFAULT_PROBES_PATH), show_default=True)
 def probes(probes_path):
     """List the non-refusal probe set (useful for tuning / custom sets)."""
-    ps = load_probes(probes_path)
+    ps = _load_probes_or_exit(probes_path)
     click.echo(f"# {len(ps)} probes from {probes_path}")
     by_dim: dict[str, list] = {}
     for p in ps:
@@ -119,7 +160,7 @@ def selftest(probes_path, n_boot, seed, tolerance):
     """Smoke-test the pure delta path offline with synthetic scores (no Ollama)."""
     from abldrift.judge import ResponseScore
 
-    ps = load_probes(probes_path)
+    ps = _load_probes_or_exit(probes_path)
     base = [ResponseScore(optimism=3.0, tone=3.0, risk_aversion=3.0) for _ in ps]
     # synthetic modified: uniformly more optimistic, more casual, more risk-averse
     modified = [ResponseScore(optimism=4.0, tone=3.8, risk_aversion=3.6) for _ in ps]

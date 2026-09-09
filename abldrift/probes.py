@@ -43,10 +43,19 @@ def load_probes(path: str | Path | None = None) -> list[Probe]:
     if not isinstance(raw, dict) or "probes" not in raw:
         raise ValueError(f"{resolved}: expected a top-level 'probes' list")
 
+    entries = raw["probes"]
+    # `probes:` with no value parses to None (and a stray scalar parses to a
+    # str/int) — reject with a clear message instead of a TypeError from
+    # enumerate() below.
+    if not isinstance(entries, list):
+        raise ValueError(
+            f"{resolved}: 'probes' must be a list, got {type(entries).__name__}"
+        )
+
     probes: list[Probe] = []
     seen_ids: set[str] = set()
     valid_dims = {"optimism", "tone", "risk_aversion"}
-    for i, entry in enumerate(raw["probes"]):
+    for i, entry in enumerate(entries):
         if not isinstance(entry, dict):
             raise ValueError(f"{resolved}: probe #{i} is not a mapping")
         pid = entry.get("id")

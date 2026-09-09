@@ -201,4 +201,6 @@ def judge_response(
         options={"temperature": 0.0},
     )
     raw = res["message"]["content"] if isinstance(res, dict) else res.message.content
-    return score_from_raw(probe.id, response_text, raw)
+    # An empty judge generation (content=None) must not crash the audit — an
+    # empty string flows into the neutral 3.0 fallback with parsed=False.
+    return score_from_raw(probe.id, response_text, raw or "")
