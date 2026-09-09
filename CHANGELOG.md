@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-09
+
+### Fixed
+
+- **`abldrift run` no longer crashes on a dead/unreachable Ollama daemon.**
+  v0.1.0 caught only `RuntimeError`, but ollama≥0.6 raises the builtin
+  `ConnectionError` for an unreachable daemon and `ollama.ResponseError` when
+  a model is not pulled — both escaped as a raw traceback **and exited 1**,
+  which is the documented "drift breach" gate code, so a CI gate misread a
+  dead daemon as DRIFT. Both now print the intended one-line error + Ollama
+  hint and exit 2; the documented exit 0/1 gate behavior is unchanged.
+- **Empty model/judge generations no longer abort the audit.** A response
+  with `content=None` (empty generation) crashed scoring with
+  `AttributeError`; it now degrades to an empty response and flows through
+  the judge's neutral fallback score instead.
+- **Malformed or missing probe-set YAML fails with a clear message.** A YAML
+  file with `probes:` (null) crashed with a raw `TypeError` from
+  `enumerate()`; a missing `--probes` file crashed with a bare
+  `FileNotFoundError` traceback. `load_probes` now validates that `probes`
+  is a list, and the CLI renders both cases as a clean one-line error with
+  exit 2 (`run`, `probes`, and `selftest`).
+- **`delta.md` no longer HTML-escapes model names and probe ids.** The jinja
+  environment used `select_autoescape`, which escapes `from_string`
+  templates — a base model named `llama3:8b&quant` rendered as
+  `llama3:8b&amp;quant` in the report header. The inline template is trusted
+  markdown, so autoescaping is now off.
+
+### Added
+
+- Test coverage for the previously untested surfaces: probe-set loading and
+  validation, report rendering (`delta.md`/`delta.json`), CLI error paths
+  (stubbed Ollama client — no daemon needed), and a version-lockstep test
+  asserting `VERSION`, `pyproject.toml`, `abldrift.__version__`, and
+  `abldrift --version` all agree.
+
 ## [0.1.0] - 2026-08-05
 
 ### Added
@@ -38,5 +73,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `README.en.md`, animated dark/light hero + atlas SVG pairs (SMIL), shields.io
   badge row, Tabler-icon headers.
 
-[Unreleased]: https://github.com/SuperMarioYL/abldrift/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/SuperMarioYL/abldrift/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.2.0
 [0.1.0]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.1.0

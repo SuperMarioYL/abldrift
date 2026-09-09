@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "abldrift"
-version = "0.1.0"
+version = "0.2.0"
 description = "Audit uncensoring/abliteration behavioral drift in local-LLM models — surfaces optimism/tone/risk-aversion shifts beyond refusals, before you ship the modified model."
 readme = "README.md"
 requires-python = ">=3.12"
