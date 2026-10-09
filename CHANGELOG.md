@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-09
+
+### Fixed
+
+- **The READMEs no longer claim the live run path is broken.** `README.md` and
+  `README.en.md` still said the live scoring objects mismatch the delta input
+  ("repair and validate that path before using it as a release gate") — the
+  defect v0.2.1 already fixed. The usage, configuration and roadmap sections
+  now state the live paired-run path is fixed and covered by offline
+  end-to-end tests against a stubbed Ollama client, keeping the honest
+  probe-set/judge-quality caveat.
+- **`--json` mode honors `--out` and keeps stdout pure even on errors.** Report
+  files were only ever written in non-json mode, so `abldrift run --json --out
+  reports/` exited 0 and silently wrote nothing; delta.md/delta.json are now
+  written unless `--no-write` is passed, with the write confirmation on stderr.
+  Error output (dead daemon, bad probe set) also goes to stderr in `--json`
+  mode — stdout carries only the JSON document, matching the progress-line
+  contract from v0.2.1.
+
+### Added
+
+- **Judge parse-fallback transparency.** When the judge model emits unparseable
+  output, the call silently falls back to the neutral 3.0 score
+  (`ScoredResponse.parsed=False`) — a fully-degraded judge produced deltas of
+  exactly 0 and a clean "within tolerance" pass. `compute_delta` now counts
+  the fallbacks (`DeltaVector.parse_failures`), `delta.json` reports
+  `judge_parse_failures` (count + total judge calls), and `delta.md` / the
+  console summary print a caution line when any call fell back.
+
 ## [0.2.1] - 2026-09-09
 
 ### Fixed
@@ -93,7 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `README.en.md`, animated dark/light hero + atlas SVG pairs (SMIL), shields.io
   badge row, Tabler-icon headers.
 
-[Unreleased]: https://github.com/SuperMarioYL/abldrift/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/SuperMarioYL/abldrift/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.3.0
 [0.2.1]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.2.1
 [0.2.0]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.2.0
 [0.1.0]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.1.0

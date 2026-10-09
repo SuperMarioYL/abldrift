@@ -18,7 +18,7 @@ from abldrift import __version__
 from abldrift.cli import main
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-EXPECTED = "0.2.1"
+EXPECTED = "0.3.0"
 
 
 def test_dunder_version_is_lockstep():
