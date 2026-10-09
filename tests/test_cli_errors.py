@@ -146,3 +146,29 @@ def test_judge_response_none_content_falls_back_to_neutral_score():
     assert (scored.score.optimism, scored.score.tone, scored.score.risk_aversion) == (
         3.0, 3.0, 3.0,
     )
+
+
+# --- --json mode: every diagnostic goes to stderr (v0.3.0) --------------------
+
+
+def test_run_json_mode_dead_daemon_error_on_stderr(monkeypatch):
+    monkeypatch.setattr(
+        runner_mod, "_get_ollama_client", lambda host=None: _StubClient(
+            exc=ConnectionError("daemon down")
+        )
+    )
+    result = CliRunner().invoke(main, ["run", "--base", "a", "--modified", "b", "--json"])
+    assert result.exit_code == 2
+    assert "error:" not in result.stdout
+    assert "error:" in result.stderr
+
+
+def test_run_json_mode_bad_probes_error_on_stderr(tmp_path):
+    bad = tmp_path / "probes.yaml"
+    bad.write_text("version: 1\nprobes:\n", encoding="utf-8")  # probes: null
+    result = CliRunner().invoke(
+        main, ["run", "--base", "a", "--modified", "b", "--json", "--probes", str(bad)]
+    )
+    assert result.exit_code == 2
+    assert "error:" not in result.stdout
+    assert "must be a list" in result.stderr

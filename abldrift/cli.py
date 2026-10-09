@@ -51,12 +51,17 @@ def _ollama_error_types() -> tuple[type[BaseException], ...]:
     return tuple(types)
 
 
-def _load_probes_or_exit(probes_path):
-    """Load the probe set, exiting 2 with a clean message on bad input."""
+def _load_probes_or_exit(probes_path, out=None):
+    """Load the probe set, exiting 2 with a clean message on bad input.
+
+    ``out`` lets --json mode route the error to stderr (stdout must carry
+    only the JSON document); defaults to the stdout console for the
+    interactive ``probes``/``selftest`` commands.
+    """
     try:
         return load_probes(probes_path)
     except (ValueError, OSError) as exc:
-        console.print(f"[bold red]error:[/bold red] {exc}")
+        (out or console).print(f"[bold red]error:[/bold red] {exc}")
         sys.exit(2)
 
 
@@ -64,8 +69,8 @@ def _run_audit(base, modified, judge, probes_path, host, tolerance, n_boot, seed
     """Run the full paired audit and return the DeltaVector (shared by run/selftest)."""
     from abldrift.runner import run_paired_audit
 
-    probes = _load_probes_or_exit(probes_path)
     out = stderr_console if as_json else console
+    probes = _load_probes_or_exit(probes_path, out=out)
 
     def progress(done, total, label):
         if done == 0 or done == total:
@@ -111,6 +116,9 @@ def main() -> None:
 def run(base, modified, judge, probes_path, host, tolerance, n_boot, seed, as_json, out_dir, no_write):
     """Run the 30-prompt paired audit and emit the behavioral delta report."""
     judge_model = judge or base
+    # In --json mode every diagnostic goes to stderr: stdout carries only the
+    # JSON document, so the README quickstart pipe into jq always parses.
+    err_console = stderr_console if as_json else console
     try:
         delta = _run_audit(
             base, modified, judge_model, probes_path, host, tolerance, n_boot, seed,
@@ -119,18 +127,21 @@ def run(base, modified, judge, probes_path, host, tolerance, n_boot, seed, as_js
     # ConnectionError is an OSError subclass, so the Ollama clause must match
     # first; probe-set/file errors (ValueError, OSError) fall through below.
     except _ollama_error_types() as exc:
-        console.print(f"[bold red]error:[/bold red] {exc}")
-        console.print(
+        err_console.print(f"[bold red]error:[/bold red] {exc}")
+        err_console.print(
             "hint: ensure a local Ollama daemon is running and both models are pulled "
             "(e.g. `ollama pull qwen2.5:7b`)"
         )
         sys.exit(2)
     except (ValueError, OSError) as exc:
-        console.print(f"[bold red]error:[/bold red] {exc}")
+        err_console.print(f"[bold red]error:[/bold red] {exc}")
         sys.exit(2)
 
     if as_json:
         click.echo(render_json(delta, base, modified, judge_model))
+        if not no_write:
+            md_path, json_path = write_reports(delta, base, modified, judge_model, out_dir)
+            stderr_console.print(f"[dim]wrote {md_path} + {json_path}[/dim]")
     else:
         print_summary(delta, base, modified, judge_model, console=console)
         if not no_write:

@@ -195,3 +195,31 @@ def test_per_axis_independence():
     assert delta.risk_aversion_delta == pytest.approx(0.0, abs=1e-6)
     assert ci_excludes_zero(delta.ci["optimism"]) is True
     assert ci_excludes_zero(delta.ci["tone"]) is False
+
+
+# --- judge parse-fallback accounting (v0.3.0) ---------------------------------
+
+
+def test_compute_delta_counts_parse_fallbacks():
+    from abldrift.judge import score_from_raw
+
+    good = '{"optimism": 3.0, "tone": 3.0, "risk_aversion": 3.0}'
+    base = [
+        score_from_raw("p1", "text", good),
+        score_from_raw("p2", "text", good),
+    ]
+    modified = [
+        score_from_raw("p1", "text", "the judge rambled and produced no scores"),
+        score_from_raw("p2", "text", '{"optimism": 3.5, "tone": 3.0, "risk_aversion": 3.0}'),
+    ]
+    delta = compute_delta(base, modified, n_boot=100, seed=1, tolerance=0.5)
+    assert delta.parse_failures == 1
+    # The degraded call contributed the neutral 3.0 midpoint on every axis.
+    p1 = next(p for p in delta.per_prompt if p.probe_id == "p1")
+    assert p1.modified.optimism == 3.0
+
+
+def test_compute_delta_bare_scores_have_zero_parse_failures():
+    base, modified = _mix(3.0, 3.0)
+    delta = compute_delta(base, modified, n_boot=100, seed=1)
+    assert delta.parse_failures == 0

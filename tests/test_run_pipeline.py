@@ -130,3 +130,59 @@ def test_run_pipeline_end_to_end_within_tolerance(monkeypatch, tmp_path):
     assert payload["delta"]["optimism"] == 0.0
     # Progress moved to stderr, not dropped.
     assert "running base probes" in result.stderr
+
+
+# --- --json report-write contract (v0.3.0) ------------------------------------
+
+
+def test_run_json_mode_writes_reports_to_out_dir(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        runner_mod, "_get_ollama_client", lambda host=None: _PipelineClient(drift=False)
+    )
+    out_dir = tmp_path / "reports"
+    result = CliRunner().invoke(
+        main,
+        ["run", "--base", "base-m", "--modified", "mod-m",
+         "--json", "--out", str(out_dir)],
+    )
+    assert result.exit_code == 0
+    # stdout stays pure JSON; files land in --out (its documented contract).
+    payload = json.loads(result.stdout)
+    assert payload["breached"] is False
+    assert (out_dir / "delta.md").exists()
+    assert (out_dir / "delta.json").exists()
+    on_disk = json.loads((out_dir / "delta.json").read_text(encoding="utf-8"))
+    assert on_disk["judge_parse_failures"] == {"count": 0, "judge_calls": 60}
+
+
+def test_run_json_no_write_writes_nothing(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        runner_mod, "_get_ollama_client", lambda host=None: _PipelineClient(drift=False)
+    )
+    out_dir = tmp_path / "reports"
+    result = CliRunner().invoke(
+        main,
+        ["run", "--base", "base-m", "--modified", "mod-m",
+         "--json", "--no-write", "--out", str(out_dir)],
+    )
+    assert result.exit_code == 0
+    assert not out_dir.exists()
+
+
+def test_run_json_error_output_goes_to_stderr(monkeypatch):
+    class _DeadClient:
+        def chat(self, **kwargs):
+            raise ConnectionError("daemon down")
+
+    monkeypatch.setattr(
+        runner_mod, "_get_ollama_client", lambda host=None: _DeadClient()
+    )
+    result = CliRunner().invoke(
+        main, ["run", "--base", "a", "--modified", "b", "--json"]
+    )
+    assert result.exit_code == 2
+    # The m8 contract extended to the error path: stdout is JSON-only.
+    assert "error:" not in result.stdout
+    assert "Traceback" not in result.stdout
+    assert "error:" in result.stderr
+    assert "Ollama daemon" in result.stderr

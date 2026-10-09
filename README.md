@@ -9,7 +9,7 @@
 
 **比较基线与修改版的乐观度、语气和风险规避评分，生成可检查的漂移报告。**
 
-`v0.2.1` · `Python 3.12+` · [MIT](LICENSE)
+`v0.3.0` · `Python 3.12+` · [MIT](LICENSE)
 
 [Website](https://abldrift.lei6393.com) · [Demo record](docs/demo-results.json)
 
@@ -58,7 +58,7 @@ uv pip install --python .venv/bin/python -e .
 .venv/bin/abldrift probes --probes abldrift/data/probes.yaml
 .venv/bin/abldrift selftest --n-boot 2000 --seed 42
 ```
-在线命令形状为 `abldrift run --base BASE --modified MODIFIED --judge JUDGE --out reports`，其中三个大写值必须替换为本机模型标签。`--json` 输出 JSON，`--no-write` 表达不写报告的意图。run 的约定是通过 0、超过容差 1、捕获到运行错误 2。当前版本在线评分对象与 delta 输入不匹配，在线流程应先修复并验证，再用于发布门禁。
+在线命令形状为 `abldrift run --base BASE --modified MODIFIED --judge JUDGE --out reports`，其中三个大写值必须替换为本机模型标签。`--json` 把 JSON 文档输出到 stdout（进度与错误信息走 stderr），默认把 delta.md + delta.json 写入 `--out` 目录，`--no-write` 表示不写报告文件。run 的约定是通过 0、超过容差 1、捕获到运行错误 2。在线配对运行链路已在 v0.2.1 修复，并由离线桩客户端的端到端测试覆盖；评分结果仍取决于问题集与评审模型质量。
 
 ## 实际 Demo
 
@@ -126,14 +126,14 @@ risk_aversion: delta=+0.600 CI=[+0.600,+0.600] excludes0=True
 
 ## 配置
 
-`--tolerance=0.5` 控制绝对均值差阈值，`--n-boot=2000` 与 `--seed=42` 控制重采样。`--probes` 指向 YAML，`--host` 指定 Ollama 地址。每条评分范围为 1–5；无法解析的 judge 输出会退回中性分数，因此应结合原始输出审阅。
+`--tolerance=0.5` 控制绝对均值差阈值，`--n-boot=2000` 与 `--seed=42` 控制重采样。`--probes` 指向 YAML，`--host` 指定 Ollama 地址。每条评分范围为 1–5；无法解析的 judge 输出会退回中性分数，报告会标注回退次数，应结合原始输出审阅。
 
 ## 路线图与范围
 
-已提供探针集、离线计算和报告模块。优先修复并验证在线评分连接；其他服务后端、持续监控与托管报告属于后续方向。
+已提供探针集、离线计算、报告模块与在线配对运行链路（在线链路已在 v0.2.1 修复并由离线端到端测试覆盖）；其他服务后端、持续监控与托管报告属于后续方向。
 
 - 配对 judge 不保证消除评分偏差，bootstrap 区间也不证明模型修改导致了真实世界效果。
-- 当前真实 Ollama run 链路存在 ScoredResponse 与 ResponseScore 接口不匹配；此示例仅覆盖可运行的离线核心。
+- ScoredResponse 与 ResponseScore 的接口不匹配已在 v0.2.1 修复；此示例（demo 记录）仍仅覆盖可运行的离线核心。
 
 ![Terminal recording](assets/demo.gif) · [Recording script](docs/demo.tape)
 

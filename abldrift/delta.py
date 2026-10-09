@@ -47,6 +47,11 @@ class DeltaVector(NamedTuple):
     ci: dict[str, tuple[float, float]]
     tolerance: float
     breaches: list[str]
+    # Judge calls that degraded to the neutral 3.0 fallback (parsed=False),
+    # counted across base+modified; 0 when inputs carry no parse metadata
+    # (bare ResponseScore). Surfaced by the reports so a garbage judge cannot
+    # silently produce a clean "within tolerance" verdict.
+    parse_failures: int = 0
 
     def breached(self) -> bool:
         """True if any dimension's point estimate exceeds the tolerance gate."""
@@ -124,6 +129,11 @@ def compute_delta(
     computed *additionally* — a CI that excludes 0 is the stronger signal the
     report surfaces, but the gate keys off the point estimate so a noisy
     judge can never silently block or pass a release.
+
+    ``parse_failures`` counts inputs whose ``parsed`` flag is explicitly
+    False — judge calls that fell back to the neutral 3.0 midpoint. A judge
+    emitting garbage on every call yields deltas of exactly 0 and a passing
+    gate, so the reports surface this count as a caution.
     """
     n = len(base_scores)
     if n != len(modified_scores):
@@ -160,6 +170,11 @@ def compute_delta(
     ci = {d: bootstrap_ci(per_dim[d], n_boot=n_boot, seed=seed) for d in DIMENSIONS}
 
     breaches = [d for d in DIMENSIONS if abs(means[d]) > tolerance]
+    parse_failures = sum(
+        1
+        for s in list(base_scores) + list(modified_scores)
+        if getattr(s, "parsed", True) is False
+    )
 
     return DeltaVector(
         optimism_delta=means["optimism"],
@@ -170,6 +185,7 @@ def compute_delta(
         ci=ci,
         tolerance=tolerance,
         breaches=breaches,
+        parse_failures=parse_failures,
     )
 
 

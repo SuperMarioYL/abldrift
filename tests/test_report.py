@@ -91,3 +91,36 @@ def test_write_reports_writes_both_files(tmp_path):
     assert json_path.name == "delta.json" and json_path.exists()
     assert "llama3:8b&quant" in md_path.read_text(encoding="utf-8")
     assert json.loads(json_path.read_text(encoding="utf-8"))["n_probes"] == 3
+
+
+# --- judge parse-fallback transparency (v0.3.0) --------------------------------
+
+
+def _delta_with_parse_failure(n: int = 3):
+    """compute_delta over paired scores where one modified call degraded."""
+    from types import SimpleNamespace
+
+    base = [SimpleNamespace(probe_id=f"p{i}", optimism=3.0, tone=3.0, risk_aversion=3.0)
+            for i in range(n)]
+    modified = [
+        SimpleNamespace(probe_id="p0", parsed=False, optimism=3.0, tone=3.0, risk_aversion=3.0),
+        *[SimpleNamespace(probe_id=f"p{i}", parsed=True, optimism=3.0, tone=3.0, risk_aversion=3.0)
+          for i in range(1, n)],
+    ]
+    return compute_delta(base, modified, n_boot=100, seed=1, tolerance=0.5)
+
+
+def test_json_reports_judge_parse_failures():
+    delta = _delta_with_parse_failure()
+    payload = json.loads(render_json(delta, "a", "b", "j"))
+    assert payload["judge_parse_failures"]["count"] == 1
+    assert payload["judge_parse_failures"]["judge_calls"] == 6  # 3 probes x 2 sides
+
+
+def test_markdown_caution_line_only_when_parse_failures():
+    clean = _delta_with_probe_ids()
+    assert "judge parse fallbacks" not in render_markdown(clean, "a", "b", "j")
+    dirty = _delta_with_parse_failure()
+    md = render_markdown(dirty, "a", "b", "j")
+    assert "judge parse fallbacks: 1 of 6" in md
+    assert "treat deltas with caution" in md

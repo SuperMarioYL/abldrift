@@ -26,7 +26,7 @@ _MD_TEMPLATE = """# abldrift — behavioral delta report
 - **judge**: {{ judge }}
 - **probes**: {{ n_probes }} (optimism/tone/risk_aversion, non-refusal)
 - **tolerance gate**: ±{{ tolerance }} · **breaches**: {{ breaches|join(", ") if breaches else "none" }}
-- **verdict**: {{ "DRIFT DETECTED" if breached else "within tolerance" }}
+- **verdict**: {{ "DRIFT DETECTED" if breached else "within tolerance" }}{{ caution_line }}
 
 ## Per-dimension delta (mean modified − base, bootstrap 95% CI)
 
@@ -63,6 +63,22 @@ def _jinja_env() -> Environment:
     return Environment(autoescape=False)
 
 
+def _parse_caution_line(delta: DeltaVector) -> str:
+    """Caution bullet appended to the report header when judge calls degraded.
+
+    An unparseable judge response silently scores the neutral 3.0 midpoint
+    (``parsed=False``), so a fully-degraded judge produces deltas of exactly 0
+    and a passing gate. The count is the reader's only signal — surface it.
+    """
+    if delta.parse_failures <= 0:
+        return ""
+    return (
+        f"\n- **caution**: judge parse fallbacks: {delta.parse_failures} of "
+        f"{delta.n_probes * 2} judge calls fell back to the neutral 3.0 score "
+        "(unparseable judge output) — treat deltas with caution."
+    )
+
+
 def render_markdown(
     delta: DeltaVector,
     base: str,
@@ -86,6 +102,7 @@ def render_markdown(
         tolerance=delta.tolerance,
         breaches=delta.breaches,
         breached=delta.breached(),
+        caution_line=_parse_caution_line(delta),
         ci_excludes_zero=ci_excludes_zero,
     )
 
@@ -102,6 +119,10 @@ def render_json(delta: DeltaVector, base: str, modified: str, judge: str) -> str
         "judge": judge,
         "n_probes": delta.n_probes,
         "tolerance": delta.tolerance,
+        "judge_parse_failures": {
+            "count": delta.parse_failures,
+            "judge_calls": delta.n_probes * 2,
+        },
         "delta": {
             "optimism": delta.optimism_delta,
             "tone": delta.tone_delta,
@@ -180,3 +201,9 @@ def print_summary(
         )
     console.print(table)
     console.print(f"verdict: [{style}]{verdict}[/{style}]  (tolerance ±{delta.tolerance}, n={delta.n_probes})")
+    if delta.parse_failures > 0:
+        console.print(
+            f"[yellow]caution: judge parse fallbacks: {delta.parse_failures} of "
+            f"{delta.n_probes * 2} judge calls fell back to the neutral 3.0 score "
+            "— treat deltas with caution[/yellow]"
+        )
