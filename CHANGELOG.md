@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-07
+
+### Fixed
+
+- **Judge parse accounting reports what actually happened.** A judge answer
+  with the three expected keys but non-numeric values (`{"optimism": "high",
+  …}`) fell back to the neutral 3.0 midpoint while `ScoredResponse.parsed` was
+  still `True`, so `judge_parse_failures` reported `0 of 60` for a completely
+  degraded judge — deltas of exactly 0, verdict "within tolerance", exit 0. The
+  parsed flag and the score now come from one parse decision, so they cannot
+  disagree. `delta.md`, `delta.json` and the console summary surface the real
+  count.
+- **A template echo no longer discards a valid judge answer.** Parsing only
+  tried the first brace-bounded block, and the judge prompt itself ends with a
+  `{"optimism": X, "tone": Y, "risk_aversion": Z}` placeholder; when the model
+  echoed it before answering, the real scores were thrown away and the call
+  scored neutral. Parsing now tries every candidate object and takes the first
+  usable one.
+- **A failing report write is a clean error, not a fake drift breach.**
+  `--out` pointing at an existing file (or an unwritable directory) raised a
+  raw traceback and exited **1**, the documented DRIFT DETECTED code, so a CI
+  gate read "could not write the report" as "drift detected". It now prints a
+  one-line error (stderr under `--json`) and exits 2 like every other caught
+  runtime error.
+- **The drift gate rejects a non-finite or negative `--tolerance`.** A NaN
+  tolerance made every `abs(delta) > tolerance` comparison false, so
+  `abldrift run --tolerance nan` reported "within tolerance" and exited 0 with
+  +4.0 drift on every axis — a pre-ship gate that could never fail. Non-finite
+  and negative values now raise a clear error instead of silently disabling
+  the gate.
+
+### Changed
+
+- Version-lockstep test extended to the README badge lines (both locales), the
+  `web/site.json` `meta.content_version` / `footer.tag` keys and the newest
+  CHANGELOG heading, so a release that bumps only the manifest fails the suite.
+
 ## [0.3.0] - 2026-10-09
 
 ### Fixed
@@ -122,7 +159,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `README.en.md`, animated dark/light hero + atlas SVG pairs (SMIL), shields.io
   badge row, Tabler-icon headers.
 
-[Unreleased]: https://github.com/SuperMarioYL/abldrift/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/SuperMarioYL/abldrift/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.4.0
 [0.3.0]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.3.0
 [0.2.1]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.2.1
 [0.2.0]: https://github.com/SuperMarioYL/abldrift/releases/tag/v0.2.0

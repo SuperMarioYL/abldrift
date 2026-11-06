@@ -18,7 +18,7 @@ from abldrift.delta import DeltaVector
 from abldrift.judge import ResponseScore
 from abldrift.probes import Probe, load_probes
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "DeltaVector",

@@ -10,7 +10,7 @@
   },
   "meta": {
     "visual_profile": "neon-particle",
-    "content_version": "v0.3.0",
+    "content_version": "v0.4.0",
     "demo_source": "docs/demo-results.json"
   },
   "hero": {
@@ -257,6 +257,6 @@
     }
   ],
   "footer": {
-    "tag": "0.3.0 · Python 3.12+ · MIT"
+    "tag": "0.4.0 · Python 3.12+ · MIT"
   }
 }

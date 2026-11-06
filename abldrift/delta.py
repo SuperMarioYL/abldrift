@@ -14,6 +14,7 @@ behind a fixed ``seed`` so two runs on the same scores yield the same CI.
 
 from __future__ import annotations
 
+import math
 import random
 from collections.abc import Sequence
 from typing import NamedTuple
@@ -139,6 +140,15 @@ def compute_delta(
     if n != len(modified_scores):
         raise ValueError(
             f"base/modified length mismatch: base={n} modified={len(modified_scores)}"
+        )
+    # A NaN tolerance makes every ``abs(delta) > tolerance`` comparison False,
+    # so the gate could never fire — a pre-ship gate that silently passes
+    # everything. A negative one breaches on every run regardless of the data.
+    # Both are rejected here, where the gate semantics live, so every caller
+    # (CLI, library, tests) is covered by one check.
+    if not math.isfinite(tolerance) or tolerance < 0:
+        raise ValueError(
+            f"tolerance must be a finite non-negative number, got {tolerance!r}"
         )
 
     per_dim: dict[str, list[float]] = {d: [] for d in DIMENSIONS}

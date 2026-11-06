@@ -91,6 +91,20 @@ def _run_audit(base, modified, judge, probes_path, host, tolerance, n_boot, seed
     )
 
 
+def _write_reports_or_exit(delta, base, modified, judge, out_dir, out):
+    """Write delta.md + delta.json, exiting 2 with a clean message on failure.
+
+    An unwritable ``--out`` (an existing file, a read-only directory) is a
+    runtime error like any other: it must not escape as a traceback, and it
+    must not exit 1, which is the documented drift-breach code a CI gate reads.
+    """
+    try:
+        return write_reports(delta, base, modified, judge, out_dir)
+    except OSError as exc:
+        out.print(f"[bold red]error:[/bold red] could not write delta.md/delta.json: {exc}")
+        sys.exit(2)
+
+
 @click.group()
 @click.version_option(__version__, prog_name="abldrift")
 def main() -> None:
@@ -107,7 +121,7 @@ def main() -> None:
 )
 @click.option("--probes", "probes_path", default=str(DEFAULT_PROBES_PATH), show_default=True, help="Probe set YAML")
 @click.option("--host", default=None, help="Ollama host (default: ollama default, http://localhost:11434)")
-@click.option("--tolerance", type=float, default=0.5, show_default=True, help="Drift gate threshold (1-5 scale)")
+@click.option("--tolerance", type=float, default=0.5, show_default=True, help="Drift gate threshold on the 1-5 scale (finite, >= 0)")
 @click.option("--n-boot", type=int, default=2000, show_default=True, help="Bootstrap iterations for the 95% CI")
 @click.option("--seed", type=int, default=42, show_default=True, help="Bootstrap RNG seed (reproducibility)")
 @click.option("--json", "as_json", is_flag=True, help="Emit delta.json to stdout instead of a rich summary")
@@ -140,12 +154,16 @@ def run(base, modified, judge, probes_path, host, tolerance, n_boot, seed, as_js
     if as_json:
         click.echo(render_json(delta, base, modified, judge_model))
         if not no_write:
-            md_path, json_path = write_reports(delta, base, modified, judge_model, out_dir)
+            md_path, json_path = _write_reports_or_exit(
+                delta, base, modified, judge_model, out_dir, stderr_console
+            )
             stderr_console.print(f"[dim]wrote {md_path} + {json_path}[/dim]")
     else:
         print_summary(delta, base, modified, judge_model, console=console)
         if not no_write:
-            md_path, json_path = write_reports(delta, base, modified, judge_model, out_dir)
+            md_path, json_path = _write_reports_or_exit(
+                delta, base, modified, judge_model, out_dir, console
+            )
             console.print(f"[dim]wrote {md_path} + {json_path}[/dim]")
 
     # CI gate: exit 0 within tolerance, 1 on breach.

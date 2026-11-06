@@ -9,7 +9,7 @@
 
 **Compare baseline and modified-model scores for optimism, tone and risk aversion in an inspectable drift report.**
 
-`v0.3.0` · `Python 3.12+` · [MIT](LICENSE)
+`v0.4.0` · `Python 3.12+` · [MIT](LICENSE)
 
 [Website](https://abldrift.lei6393.com) · [Demo record](docs/demo-results.json)
 

@@ -186,3 +186,53 @@ def test_run_json_error_output_goes_to_stderr(monkeypatch):
     assert "Traceback" not in result.stdout
     assert "error:" in result.stderr
     assert "Ollama daemon" in result.stderr
+
+
+# --- report-write failures and the tolerance gate (v0.4.0) --------------------
+
+
+def test_run_unwritable_out_exits_2_not_1(monkeypatch, tmp_path):
+    # Exit 1 is the documented DRIFT DETECTED code, so a failed report write
+    # must not land there (nor escape as a traceback).
+    monkeypatch.setattr(
+        runner_mod, "_get_ollama_client", lambda host=None: _PipelineClient(drift=False)
+    )
+    out_path = tmp_path / "not-a-dir"
+    out_path.write_text("occupied", encoding="utf-8")
+    result = CliRunner().invoke(
+        main, ["run", "--base", "base-m", "--modified", "mod-m", "--out", str(out_path)]
+    )
+    assert result.exit_code == 2
+    assert "error:" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_run_json_unwritable_out_error_on_stderr(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        runner_mod, "_get_ollama_client", lambda host=None: _PipelineClient(drift=False)
+    )
+    out_path = tmp_path / "not-a-dir"
+    out_path.write_text("occupied", encoding="utf-8")
+    result = CliRunner().invoke(
+        main,
+        ["run", "--base", "base-m", "--modified", "mod-m", "--json", "--out", str(out_path)],
+    )
+    assert result.exit_code == 2
+    assert "Traceback" not in result.stderr
+    assert "error:" in result.stderr
+    assert "could not write" in result.stderr
+
+
+def test_run_nan_tolerance_is_rejected_instead_of_silently_passing(monkeypatch):
+    # A judge that drifts +4.0 on every axis must never yield exit 0.
+    monkeypatch.setattr(
+        runner_mod, "_get_ollama_client", lambda host=None: _PipelineClient(drift=True)
+    )
+    result = CliRunner().invoke(
+        main,
+        ["run", "--base", "base-m", "--modified", "mod-m",
+         "--tolerance", "nan", "--json", "--no-write"],
+    )
+    assert result.exit_code == 2
+    assert "within tolerance" not in result.stdout
+    assert "tolerance must be a finite non-negative" in result.stderr

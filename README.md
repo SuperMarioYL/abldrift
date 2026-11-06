@@ -9,7 +9,7 @@
 
 **比较基线与修改版的乐观度、语气和风险规避评分，生成可检查的漂移报告。**
 
-`v0.3.0` · `Python 3.12+` · [MIT](LICENSE)
+`v0.4.0` · `Python 3.12+` · [MIT](LICENSE)
 
 [Website](https://abldrift.lei6393.com) · [Demo record](docs/demo-results.json)
 

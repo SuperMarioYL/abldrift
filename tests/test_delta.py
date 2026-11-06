@@ -223,3 +223,58 @@ def test_compute_delta_bare_scores_have_zero_parse_failures():
     base, modified = _mix(3.0, 3.0)
     delta = compute_delta(base, modified, n_boot=100, seed=1)
     assert delta.parse_failures == 0
+
+
+# --- judge parse truthfulness (v0.4.0) ---------------------------------------
+
+
+def test_parsed_flag_is_false_when_json_values_are_not_numeric():
+    # Keys present, values unusable: the call really degraded to the neutral
+    # midpoint, so the flag must say so (it used to report True here, which
+    # made judge_parse_failures claim a clean audit).
+    from abldrift.judge import score_from_raw
+
+    scored = score_from_raw(
+        "p1", "text", '{"optimism": "high", "tone": "casual", "risk_aversion": "low"}'
+    )
+    assert scored.parsed is False
+    assert (scored.score.optimism, scored.score.tone, scored.score.risk_aversion) == (
+        3.0, 3.0, 3.0,
+    )
+
+
+def test_template_echo_does_not_shadow_a_later_valid_score_object():
+    # The judge prompt ends with this placeholder (judge.py), so models echo it.
+    from abldrift.judge import score_from_raw
+
+    raw = (
+        'Respond as: {"optimism": X, "tone": Y, "risk_aversion": Z}\n'
+        '{"optimism": 4.2, "tone": 3.1, "risk_aversion": 2.0}'
+    )
+    scored = score_from_raw("p1", "text", raw)
+    assert scored.parsed is True
+    assert (scored.score.optimism, scored.score.tone, scored.score.risk_aversion) == (
+        4.2, 3.1, 2.0,
+    )
+
+
+def test_compute_delta_counts_every_degraded_judge_shape():
+    from abldrift.judge import score_from_raw
+
+    good = '{"optimism": 3.0, "tone": 3.0, "risk_aversion": 3.0}'
+    base = [score_from_raw("p1", "t", good), score_from_raw("p2", "t", good)]
+    modified = [
+        score_from_raw("p1", "t", "no scores here at all"),
+        score_from_raw("p2", "t", '{"optimism": "high", "tone": "casual", "risk_aversion": "low"}'),
+    ]
+    delta = compute_delta(base, modified, n_boot=100, seed=1, tolerance=0.5)
+    assert delta.parse_failures == 2
+
+
+def test_tolerance_must_be_finite_and_non_negative():
+    base, modified = _mix(3.0, 4.0)
+    for bad in (float("nan"), float("inf"), -0.1):
+        with pytest.raises(ValueError, match="tolerance must be a finite non-negative"):
+            compute_delta(base, modified, n_boot=50, tolerance=bad)
+    # 0.0 is legitimate (any non-zero drift breaches) and still computes.
+    assert compute_delta(base, modified, n_boot=50, tolerance=0.0).breached() is True

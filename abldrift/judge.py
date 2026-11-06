@@ -106,59 +106,80 @@ _NUM_RE = re.compile(
 )
 
 
+def _score_from_json_block(block: str) -> ResponseScore | None:
+    """Score one brace-bounded candidate, or None if it is not a usable answer.
+
+    "Usable" means a JSON object carrying all three axes with values the
+    ``ResponseScore`` validator accepts (numeric, clamped). A placeholder echo
+    like ``{"optimism": X, "tone": Y, "risk_aversion": Z}`` has the keys but
+    fails validation, so it yields None rather than a bogus score.
+    """
+    try:
+        obj = json.loads(block)
+    except (ValueError, TypeError):
+        return None
+    if not isinstance(obj, dict):
+        return None
+    if not {"optimism", "tone", "risk_aversion"} <= obj.keys():
+        return None
+    try:
+        return ResponseScore(
+            optimism=obj["optimism"],
+            tone=obj["tone"],
+            risk_aversion=obj["risk_aversion"],
+        )
+    except (ValueError, TypeError):  # pydantic's ValidationError is a ValueError
+        return None
+
+
+def _parse(raw: str) -> tuple[ResponseScore, bool]:
+    """Parse the judge's raw text into (score, whether it really parsed).
+
+    The flag is produced by the same decision that produces the score, so it
+    can never disagree with it. Three stages:
+
+    1. every brace-bounded JSON candidate in order, first usable one wins —
+       trying only the first is wrong because the judge prompt itself ends with
+       a placeholder object (``{"optimism": X, ...}``) and models often echo it
+       before answering;
+    2. a lenient ``key: value`` scan for unquoted scores;
+    3. the neutral 3.0 midpoint, reported as not parsed.
+    """
+    text = raw.strip()
+    for candidate in _JSON_RE.finditer(text):
+        score = _score_from_json_block(candidate.group(0))
+        if score is not None:
+            return score, True
+
+    hits = {k.lower(): float(v) for k, v in _NUM_RE.findall(text)}
+    if {"optimism", "tone", "risk_aversion"} <= hits.keys():
+        return (
+            ResponseScore(
+                optimism=hits["optimism"],
+                tone=hits["tone"],
+                risk_aversion=hits["risk_aversion"],
+            ),
+            True,
+        )
+
+    # Neutral fallback — the judge produced nothing usable on this call.
+    return ResponseScore(optimism=3.0, tone=3.0, risk_aversion=3.0), False
+
+
 def parse_judge_output(raw: str) -> ResponseScore:
     """Parse the judge's raw text into a clamped ``ResponseScore``.
 
-    Tries strict JSON first, then a lenient ``key: value`` regex, and finally
-    falls back to the neutral midpoint (3.0) on each axis so an unparseable
-    judge call degrades gracefully instead of aborting the run. The caller
-    records ``parsed=False`` in that case via :func:`score_from_raw`.
+    Falls back to the neutral midpoint (3.0) on each axis so an unparseable
+    judge call degrades gracefully instead of aborting the run; the fallback
+    is reported as ``parsed=False`` by :func:`score_from_raw`.
     """
-    text = raw.strip()
-    # 1. strict-ish JSON object.
-    m = _JSON_RE.search(text)
-    if m:
-        try:
-            obj = json.loads(m.group(0))
-            if isinstance(obj, dict) and {
-                "optimism",
-                "tone",
-                "risk_aversion",
-            } <= obj.keys():
-                return ResponseScore(
-                    optimism=obj["optimism"],
-                    tone=obj["tone"],
-                    risk_aversion=obj["risk_aversion"],
-                )
-        except (ValueError, TypeError):
-            pass
-
-    # 2. lenient key: value scan.
-    hits = {k.lower(): float(v) for k, v in _NUM_RE.findall(text)}
-    if {"optimism", "tone", "risk_aversion"} <= hits.keys():
-        return ResponseScore(
-            optimism=hits["optimism"], tone=hits["tone"], risk_aversion=hits["risk_aversion"]
-        )
-
-    # 3. neutral fallback — judge produced nothing parseable.
-    return ResponseScore(optimism=3.0, tone=3.0, risk_aversion=3.0)
+    return _parse(raw)[0]
 
 
 def score_from_raw(probe_id: str, text: str, raw: str) -> ScoredResponse:
-    """Wrap ``parse_judge_output`` with parse-success metadata."""
-    obj = _JSON_RE.search(raw.strip())
-    parsed_ok = False
-    if obj:
-        try:
-            data = json.loads(obj.group(0))
-            parsed_ok = {"optimism", "tone", "risk_aversion"} <= data.keys()
-        except (ValueError, TypeError):
-            parsed_ok = False
-    if not parsed_ok:
-        hits = _NUM_RE.findall(raw)
-        parsed_ok = len({k.lower() for k, _ in hits}) >= 3
-    score = parse_judge_output(raw)
-    return ScoredResponse(probe_id=probe_id, text=text, score=score, parsed=parsed_ok, raw=raw)
+    """Score one judge generation, recording whether it really parsed."""
+    score, parsed = _parse(raw)
+    return ScoredResponse(probe_id=probe_id, text=text, score=score, parsed=parsed, raw=raw)
 
 
 # --- ollama call (lazy import) ---------------------------------------------
